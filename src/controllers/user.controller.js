@@ -6,7 +6,6 @@ import {ApiResponse} from '../utils/ApiResponse.js';
 
 const registerUser = asyncHandler( async (req, res) => {
     const {fullName, email, userName, password } = req.body
-    console.log(fullName);
 
     if (
         [fullName, email, userName, password].some((field) => 
@@ -15,7 +14,7 @@ const registerUser = asyncHandler( async (req, res) => {
         throw new ApiError(400, "Please fill in all fields")
     }
 
-    const existedUser = User.findOne({
+    const existedUser = await User.findOne({
         $or: [
             {email},
             {userName}
@@ -36,17 +35,18 @@ const registerUser = asyncHandler( async (req, res) => {
     const avatar = await uploadOnCloudinary(avatarLocalPath)
     const coverImage = await uploadOnCloudinary(coverImageLocalPath)
 
+
     if(!avatar){
         throw new ApiError(500, "Failed to upload avatar ")
     }
 
-    User.create({
+    const user = await User.create({
         fullName, 
         avatar: avatar.url,
         coverImage: coverImage?.url || "",
         email,
         password,
-        username: userName.toLowerCase()
+        userName: userName.toLowerCase()
     })
 
     const createdUser = await User.findById(user._id).select(
